@@ -33,15 +33,28 @@ class RoutineScreen(Screen):
         container.clear_widgets()
         
         app = App.get_running_app()
+        if not app.study_manager.routines:
+            container.add_widget(Button(
+                text="Aún no tienes rutinas. Crea tu primera rutina.",
+                size_hint_y=None,
+                height=80,
+                background_color=(0.7, 0.7, 0.7, 1),
+                disabled=True,
+            ))
+
         for routine in app.study_manager.routines:
             btn = Button(
-                text=f"{routine['name']}\nTécnica: {routine['technique']} - Horario: {routine['schedule']}",
+                text=(
+                    f"{routine.get('name', 'Sin nombre')}\n"
+                    f"Técnica: {routine.get('technique', 'N/A')} - "
+                    f"Horario: {routine.get('schedule', 'N/A')}"
+                ),
                 size_hint_y=None,
                 height=100,
                 background_color=(0.5, 0.7, 0.9, 1)
             )
             container.add_widget(btn)
-        
+
         btn = Button(
             text="+ Crear Nueva Rutina",
             size_hint_y=None,

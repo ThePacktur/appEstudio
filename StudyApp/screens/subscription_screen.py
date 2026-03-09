@@ -39,9 +39,14 @@ Builder.load_string("""
 class SubscriptionScreen(Screen):
     def subscribe(self):
         app = App.get_running_app()
+
+        if app.study_manager.subscribed:
+            self._show_popup("Información", "Ya tienes una suscripción activa.")
+            return
+
         app.study_manager.subscribed = True
         app.study_manager.save_data()
-        
+
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         content.add_widget(Label(text="¡Suscripción exitosa!\nAhora tienes acceso completo"))
         btn = Button(text="Aceptar", size_hint_y=0.4)
@@ -53,3 +58,12 @@ class SubscriptionScreen(Screen):
     def post_subscription(self, popup):
         popup.dismiss()
         self.manager.current = 'techniques'
+
+    def _show_popup(self, title, message):
+        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        content.add_widget(Label(text=message))
+        btn = Button(text="Aceptar", size_hint_y=0.4)
+        popup = Popup(title=title, content=content, size_hint=(0.7, 0.4))
+        btn.bind(on_release=popup.dismiss)
+        content.add_widget(btn)
+        popup.open()
