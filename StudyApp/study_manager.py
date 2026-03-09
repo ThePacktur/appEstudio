@@ -1,15 +1,17 @@
 import json
-import os
+from dataclasses import dataclass
+from pathlib import Path
 
+@dataclass(frozen=True)
 class StudyTechnique:
-    def __init__(self, name, description, duration, premium=False):
-        self.name = name
-        self.description = description
-        self.duration = duration
-        self.premium = premium
+    name: str
+    description: str
+    duration: int
+    premium: bool = False
 
 class StudyManager:
     def __init__(self):
+        self.data_file = Path(__file__).resolve().parent / "user_data.json"
         self.techniques = [
             StudyTechnique("Pomodoro", "25 min estudio + 5 min descanso", 25),
             StudyTechnique("Feynman", "Explica conceptos en términos simples", 30),
@@ -28,24 +30,37 @@ class StudyManager:
         self.load_data()
     
     def load_data(self):
-        if os.path.exists("user_data.json"):
-            with open("user_data.json", 'r') as f:
+        if not self.data_file.exists():
+            return
+
+        try:
+            with self.data_file.open("r", encoding="utf-8") as f:
                 data = json.load(f)
-                self.subscribed = data.get('subscribed', False)
-                self.routines = data.get('routines', [])
+        except (json.JSONDecodeError, OSError):
+            # Si el archivo está corrupto o inaccesible, continuamos con estado por defecto.
+            return
+
+        self.subscribed = bool(data.get("subscribed", False))
+        self.routines = [
+            routine for routine in data.get("routines", [])
+            if all(key in routine for key in ("name", "technique", "schedule"))
+        ]
     
     def save_data(self):
         data = {
             'subscribed': self.subscribed,
             'routines': self.routines
         }
-        with open("user_data.json", 'w') as f:
-            json.dump(data, f)
+        with self.data_file.open("w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
     
     def get_available_techniques(self):
         return [t for t in self.techniques if not t.premium or self.subscribed]
     
     def add_routine(self, name, technique, schedule):
+        name = name.strip()
+        schedule = schedule.strip()
+
         self.routines.append({
             'name': name,
             'technique': technique,

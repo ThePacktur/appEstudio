@@ -3,6 +3,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.dropdown import DropDown
 from kivy.uix.button import Button
 from kivy.lang import Builder
+import re
 
 Builder.load_string("""
 <CreateRoutineScreen>:
@@ -40,6 +41,8 @@ Builder.load_string("""
 """)
 
 class CreateRoutineScreen(Screen):
+    SCHEDULE_PATTERN = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+
     def on_enter(self):
         self.ids.routine_name.text = ""
         self.ids.schedule.text = ""
@@ -71,10 +74,12 @@ class CreateRoutineScreen(Screen):
         self.technique_dropdown.dismiss()
     
     def save_routine(self):
-        name = self.ids.routine_name.text
-        schedule = self.ids.schedule.text
+        name = self.ids.routine_name.text.strip()
+        schedule = self.ids.schedule.text.strip()
         
         if not name or not schedule or not self.technique:
+            return
+        if not self.SCHEDULE_PATTERN.match(schedule):
             return
         
         app = App.get_running_app()
