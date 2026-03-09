@@ -56,9 +56,13 @@ class TimerScreen(Screen):
     initial_time = NumericProperty(1)
     technique_name = StringProperty("")
     is_running = BooleanProperty(False)
-    
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.technique = None
+        self.event = None
+
     def start_technique(self, technique):
-        app = App.get_running_app()
         self.technique = technique
         self.time_left = technique.duration * 60
         self.initial_time = self.time_left
@@ -71,21 +75,29 @@ class TimerScreen(Screen):
             self.event = Clock.schedule_interval(self.update_timer, 1)
     
     def pause_timer(self):
-        if self.is_running:
+        if self.is_running and self.event is not None:
             self.is_running = False
             self.event.cancel()
+            self.event = None
     
     def reset_timer(self):
+        if self.technique is None:
+            return
+
         self.time_left = self.technique.duration * 60
         self.initial_time = self.time_left
-        if self.is_running:
+        if self.event is not None:
             self.event.cancel()
-            self.is_running = False
+            self.event = None
+        self.is_running = False
     
     def update_timer(self, dt):
         self.time_left -= 1
         if self.time_left <= 0:
-            self.event.cancel()
+            if self.event is not None:
+                self.event.cancel()
+                self.event = None
+            self.time_left = 0
             self.is_running = False
             self.show_completion_popup()
     
